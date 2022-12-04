@@ -21,7 +21,6 @@ package scheduler
 import (
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1485,15 +1484,13 @@ func (pc *PartitionContext) moveTerminatedApp(appID string) {
 		return
 	}
 	app.UnSetQueue()
-	// new ID as completedApplications map key, use negative value to get a divider
-	newID := appID + strconv.FormatInt(-(time.Now()).Unix(), 10)
 	log.Logger().Info("Removing terminated application from the application list",
 		zap.String("appID", appID),
 		zap.String("app status", app.CurrentState()))
 	pc.Lock()
 	defer pc.Unlock()
 	delete(pc.applications, appID)
-	pc.completedApplications[newID] = app
+	pc.completedApplications[app.GetCompletionID()] = app
 }
 
 func (pc *PartitionContext) AddRejectedApplication(rejectedApplication *objects.Application, rejectedMessage string) {

@@ -21,6 +21,7 @@ package objects
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1361,6 +1362,11 @@ func (sa *Application) FinishedTime() time.Time {
 	sa.RLock()
 	defer sa.RUnlock()
 	return sa.finishedTime
+}
+
+func (sa *Application) GetCompletionID() string {
+	// use negative value to get a divider
+	return sa.ApplicationID + strconv.FormatInt(-(sa.FinishedTime()).Unix(), 10)
 }
 
 // get a copy of all allocations of the application
