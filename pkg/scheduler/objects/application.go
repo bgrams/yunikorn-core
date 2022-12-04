@@ -101,6 +101,7 @@ type Application struct {
 	rmEventHandler     handler.EventHandler
 	rmID               string
 	terminatedCallback func(appID string)
+	expiredCallback    func(src string)
 
 	sync.RWMutex
 }
@@ -1675,9 +1676,21 @@ func (sa *Application) SetTerminatedCallback(callback func(appID string)) {
 	sa.terminatedCallback = callback
 }
 
+func (sa *Application) SetExpiredCallback(callback func(src string)) {
+	sa.Lock()
+	defer sa.Unlock()
+	sa.expiredCallback = callback
+}
+
 func (sa *Application) executeTerminatedCallback() {
 	if sa.terminatedCallback != nil {
 		go sa.terminatedCallback(sa.ApplicationID)
+	}
+}
+
+func (sa *Application) executeExpiredCallback(src string) {
+	if sa.expiredCallback != nil {
+		sa.expiredCallback(src)
 	}
 }
 

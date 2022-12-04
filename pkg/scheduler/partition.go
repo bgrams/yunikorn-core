@@ -374,6 +374,7 @@ func (pc *PartitionContext) AddApplication(app *objects.Application) error {
 	// all is OK update the app and add it to the partition
 	app.SetQueue(queue)
 	app.SetTerminatedCallback(pc.moveTerminatedApp)
+	app.SetExpiredCallback(pc.expireApplicationCallback(app))
 	pc.applications[appID] = app
 
 	return nil
@@ -447,6 +448,25 @@ func (pc *PartitionContext) getRejectedApplication(appID string) *objects.Applic
 	defer pc.RUnlock()
 
 	return pc.rejectedApplications[appID]
+}
+
+func (pc *PartitionContext) getCompletedApplication(completionID string) *objects.Application {
+	pc.RLock()
+	defer pc.RUnlock()
+
+	return pc.completedApplications[completionID]
+}
+
+func (pc *PartitionContext) removeCompletedApplication(completionID string) {
+	pc.Lock()
+	defer pc.Unlock()
+	delete(pc.completedApplications, completionID)
+}
+
+func (pc *PartitionContext) removeRejectedApplication(appID string) {
+	pc.Lock()
+	defer pc.Unlock()
+	delete(pc.rejectedApplications, appID)
 }
 
 // Return a copy of the map of all reservations for the partition.
@@ -1493,6 +1513,20 @@ func (pc *PartitionContext) moveTerminatedApp(appID string) {
 	pc.completedApplications[app.GetCompletionID()] = app
 }
 
+func (pc *PartitionContext) expireApplicationCallback(app *objects.Application) func(src string) {
+	return func(src string) {
+		log.Logger().Info(fmt.Sprintf("Expiring %s application", src))
+		switch src {
+		case objects.Completed.String():
+			pc.removeCompletedApplication(app.GetCompletionID())
+		case objects.Failed.String():
+			pc.removeApplication(app.ApplicationID)
+		case objects.Rejected.String():
+			pc.removeRejectedApplication(app.ApplicationID)
+		}
+	}
+}
+
 func (pc *PartitionContext) AddRejectedApplication(rejectedApplication *objects.Application, rejectedMessage string) {
 	if err := rejectedApplication.RejectApplication(rejectedMessage); err != nil {
 		log.Logger().Warn("BUG: Unexpected failure: Application state not changed to Rejected",
@@ -1503,4 +1537,5 @@ func (pc *PartitionContext) AddRejectedApplication(rejectedApplication *objects.
 		pc.rejectedApplications = make(map[string]*objects.Application)
 	}
 	pc.rejectedApplications[rejectedApplication.ApplicationID] = rejectedApplication
+	rejectedApplication.SetExpiredCallback(pc.expireApplicationCallback(rejectedApplication))
 }

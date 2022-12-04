@@ -27,28 +27,21 @@ import (
 	"github.com/apache/yunikorn-core/pkg/scheduler/objects"
 )
 
-const (
-	DefaultCleanRootInterval        = 10000 * time.Millisecond // sleep between queue removal checks
-	DefaultCleanExpiredAppsInterval = 24 * time.Hour           // sleep between apps removal checks
-)
+const DefaultCleanRootInterval = 10000 * time.Millisecond // sleep between queue removal checks
 
 type partitionManager struct {
-	pc                       *PartitionContext
-	cc                       *ClusterContext
-	stopCleanRoot            chan struct{}
-	stopCleanExpiredApps     chan struct{}
-	cleanRootInterval        time.Duration
-	cleanExpiredAppsInterval time.Duration
+	pc                *PartitionContext
+	cc                *ClusterContext
+	stopCleanRoot     chan struct{}
+	cleanRootInterval time.Duration
 }
 
 func newPartitionManager(pc *PartitionContext, cc *ClusterContext) *partitionManager {
 	return &partitionManager{
-		pc:                       pc,
-		cc:                       cc,
-		stopCleanRoot:            make(chan struct{}),
-		stopCleanExpiredApps:     make(chan struct{}),
-		cleanRootInterval:        DefaultCleanRootInterval,
-		cleanExpiredAppsInterval: DefaultCleanExpiredAppsInterval,
+		pc:                pc,
+		cc:                cc,
+		stopCleanRoot:     make(chan struct{}),
+		cleanRootInterval: DefaultCleanRootInterval,
 	}
 }
 
@@ -63,7 +56,7 @@ func (manager *partitionManager) Run() {
 	log.Logger().Info("starting partition manager",
 		zap.String("partition", manager.pc.Name),
 		zap.String("cleanRootInterval", manager.cleanRootInterval.String()))
-	go manager.cleanExpiredApps()
+
 	go manager.cleanRoot()
 }
 
@@ -90,7 +83,6 @@ func (manager *partitionManager) cleanRoot() {
 // No locking needed as there is just one place where this is called which is already locked.
 func (manager *partitionManager) Stop() {
 	go func() {
-		manager.stopCleanExpiredApps <- struct{}{}
 		manager.stopCleanRoot <- struct{}{}
 		manager.remove()
 	}()
@@ -165,19 +157,4 @@ func (manager *partitionManager) remove() {
 		zap.String("partitionName", manager.pc.Name))
 	// remove the scheduler object
 	manager.cc.removePartition(manager.pc.Name)
-}
-
-func (manager *partitionManager) cleanExpiredApps() {
-	for {
-		cleanExpiredAppsInterval := manager.cleanExpiredAppsInterval
-		if cleanExpiredAppsInterval <= 0 {
-			cleanExpiredAppsInterval = DefaultCleanExpiredAppsInterval
-		}
-		select {
-		case <-manager.stopCleanExpiredApps:
-			return
-		case <-time.After(cleanExpiredAppsInterval):
-			manager.pc.cleanupExpiredApps()
-		}
-	}
 }

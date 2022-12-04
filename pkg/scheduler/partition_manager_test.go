@@ -52,9 +52,6 @@ func TestStopPartitionManager(t *testing.T) {
 	p.partitionManager.Stop()
 
 	// this call should not be blocked forever
-	p.partitionManager.cleanExpiredApps()
-
-	// this call should not be blocked forever
 	p.partitionManager.cleanRoot()
 }
 
