@@ -48,19 +48,20 @@ type PartitionContext struct {
 	Name string // name of the partition (logging mainly)
 
 	// Private fields need protection
-	root                   *objects.Queue                  // start of the queue hierarchy
-	applications           map[string]*objects.Application // applications assigned to this partition
-	completedApplications  map[string]*objects.Application // completed applications from this partition
-	rejectedApplications   map[string]*objects.Application // rejected applications from this partition
-	nodes                  objects.NodeCollection          // nodes assigned to this partition
-	placementManager       *placement.AppPlacementManager  // placement manager for this partition
-	partitionManager       *partitionManager               // manager for this partition
-	stateMachine           *fsm.FSM                        // the state of the partition for scheduling
-	stateTime              time.Time                       // last time the state was updated (needed for cleanup)
-	rules                  *[]configs.PlacementRule        // placement rules to be loaded by the scheduler
-	userGroupCache         *security.UserGroupCache        // user cache per partition
-	totalPartitionResource *resources.Resource             // Total node resources
-	allocations            int                             // Number of allocations on the partition
+	root                   *objects.Queue                      // start of the queue hierarchy
+	applications           map[string]*objects.Application     // applications assigned to this partition
+	completedApplications  map[string]*objects.Application     // completed applications from this partition
+	rejectedApplications   map[string]*objects.Application     // rejected applications from this partition
+	resourceProfiles       map[string]*objects.ResourceProfile // resourceProfiles defined for this partition
+	nodes                  objects.NodeCollection              // nodes assigned to this partition
+	placementManager       *placement.AppPlacementManager      // placement manager for this partition
+	partitionManager       *partitionManager                   // manager for this partition
+	stateMachine           *fsm.FSM                            // the state of the partition for scheduling
+	stateTime              time.Time                           // last time the state was updated (needed for cleanup)
+	rules                  *[]configs.PlacementRule            // placement rules to be loaded by the scheduler
+	userGroupCache         *security.UserGroupCache            // user cache per partition
+	totalPartitionResource *resources.Resource                 // Total node resources
+	allocations            int                                 // Number of allocations on the partition
 
 	// The partition write lock must not be held while manipulating an application.
 	// Scheduling is running continuously as a lock free background task. Scheduling an application

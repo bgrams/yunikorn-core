@@ -45,11 +45,12 @@ type SchedulerConfig struct {
 type PartitionConfig struct {
 	Name              string
 	Queues            []QueueConfig
-	PlacementRules    []PlacementRule           `yaml:",omitempty" json:",omitempty"`
-	Limits            []Limit                   `yaml:",omitempty" json:",omitempty"`
-	Preemption        PartitionPreemptionConfig `yaml:",omitempty" json:",omitempty"` // deprecated
-	NodeSortPolicy    NodeSortingPolicy         `yaml:",omitempty" json:",omitempty"`
-	StateDumpFilePath string                    `yaml:",omitempty" json:",omitempty"`
+	PlacementRules    []PlacementRule                  `yaml:",omitempty" json:",omitempty"`
+	Limits            []Limit                          `yaml:",omitempty" json:",omitempty"`
+	Preemption        PartitionPreemptionConfig        `yaml:",omitempty" json:",omitempty"` // deprecated
+	NodeSortPolicy    NodeSortingPolicy                `yaml:",omitempty" json:",omitempty"`
+	StateDumpFilePath string                           `yaml:",omitempty" json:",omitempty"`
+	ResourceProfiles  map[string]ResourceProfileConfig `yaml:",omitempty" json:",omitempty"`
 }
 
 // deprecated
@@ -91,6 +92,12 @@ type ChildTemplate struct {
 type Resources struct {
 	Guaranteed map[string]string `yaml:",omitempty" json:",omitempty"`
 	Max        map[string]string `yaml:",omitempty" json:",omitempty"`
+	Profiles   []string          `yaml:",omitempty" json:",omitempty"`
+}
+
+type ResourceProfileConfig struct {
+	NodeLabels map[string]string `yaml:",omitempty" json:",omitempty"`
+	Resources  map[string]string `yaml:",omitempty" json:",omitempty"`
 }
 
 // The queue placement rule definition

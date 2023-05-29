@@ -43,9 +43,10 @@ import (
 const disableReservation = "DISABLE_RESERVATION"
 
 type ClusterContext struct {
-	partitions     map[string]*PartitionContext
-	policyGroup    string
-	rmEventHandler handler.EventHandler
+	partitions       map[string]*PartitionContext
+	policyGroup      string
+	rmEventHandler   handler.EventHandler
+	resourceProfiles []*objects.ResourceProfile
 
 	// config values that change scheduling behaviour
 	needPreemption      bool

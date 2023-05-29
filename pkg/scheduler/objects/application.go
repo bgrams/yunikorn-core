@@ -77,6 +77,7 @@ type Application struct {
 	// Private fields need protection
 	queuePath         string
 	queue             *Queue                    // queue the application is running in
+	resourceProfile   string                    // resourceProfile the application is claiming resources from
 	pending           *resources.Resource       // pending resources from asks for the app
 	reservations      map[string]*reservation   // a map of reservations
 	requests          map[string]*AllocationAsk // a map of asks
@@ -1559,6 +1560,18 @@ func (sa *Application) UnSetQueue() {
 	defer sa.Unlock()
 	sa.queue = nil
 	sa.finishedTime = time.Now()
+}
+
+func (sa *Application) SetResourceProfile(profile string) {
+	sa.Lock()
+	defer sa.Unlock()
+	sa.resourceProfile = profile
+}
+
+func (sa *Application) UnSetResourceProfile() {
+	sa.Lock()
+	defer sa.Unlock()
+	sa.resourceProfile = ""
 }
 
 func (sa *Application) StartTime() time.Time {
