@@ -418,8 +418,9 @@ func (pc *PartitionContext) removeApplication(appID string) []*objects.Allocatio
 		}
 	}
 
-	if profile := app.GetResourceProfile(); profile != "" {
-		pc.resourceProfiles[profile].RemoveApplication(app.ApplicationID)
+	profile := pc.resourceProfiles[app.GetResourceProfile()]
+	if profile != nil {
+		profile.RemoveApplication(app.ApplicationID)
 	}
 
 	return allocations
