@@ -170,20 +170,60 @@ func checkResourceConfig(cur QueueConfig) (*resources.Resource, *resources.Resou
 	return g, m, nil
 }
 
-func checkQueueResourceProfileConfig(queue QueueConfig, profiles map[string]ResourceProfileConfig) error {
-	failed := make([]string, 0)
-	for _, profile := range queue.Resources.Profiles {
-		if _, ok := profiles[profile]; !ok {
-			failed = append(failed, profile)
+func checkResourceProfileEntries(partition PartitionConfig) (map[string]ResourceProfileConfig, error) {
+	profileMap := make(map[string]ResourceProfileConfig)
+	for _, v := range partition.ResourceProfiles {
+		if _, ok := profileMap[v.Name]; ok {
+			return nil, fmt.Errorf("duplicate resource profile found with name %s", v.Name)
+		}
+		profileMap[v.Name] = v
+	}
+	return profileMap, nil
+}
+
+func checkResourceProfileResources(profileMap map[string]ResourceProfileConfig) error {
+	for _, profile := range profileMap {
+		_, err := resources.NewResourceFromConf(profile.Resources)
+		if err != nil {
+			return err
 		}
 	}
-	if len(failed) > 0 {
-		failstr := strings.Join(failed, ", ")
-		return fmt.Errorf("queue %s references nonexistent resource profiles: %s", queue.Name, failstr)
+	return nil
+}
+
+func checkQueueResourceProfiles(queue QueueConfig, profileMap map[string]ResourceProfileConfig) error {
+
+	var failed bool
+
+	exists := make(map[string]bool)
+	nonexists := make([]string, 0)
+	duplicated := make([]string, 0)
+
+	for _, profile := range queue.Resources.Profiles {
+		if _, ok := profileMap[profile]; !ok {
+			nonexists = append(nonexists, profile)
+			failed = true
+		}
+		if exists[profile] {
+			duplicated = append(duplicated, profile)
+			failed = true
+		}
+		exists[profile] = true
+	}
+
+	if failed {
+		errmsg := fmt.Sprintf("queue %s has invalid resource profile configuration:", queue.Name)
+		if len(nonexists) > 0 {
+			errmsg += fmt.Sprintf(" nonexistent profiles [%s]", strings.Join(nonexists, ", "))
+		}
+		if len(duplicated) > 0 {
+			errmsg += fmt.Sprintf(" duplicated profiles [%s]", strings.Join(duplicated, ", "))
+		}
+		return fmt.Errorf(errmsg)
 	}
 
 	for _, q := range queue.Queues {
-		err := checkQueueResourceProfileConfig(q, profiles)
+		err := checkQueueResourceProfiles(q, profileMap)
 		if err != nil {
 			return err
 		}
@@ -616,7 +656,16 @@ func Validate(newConfig *SchedulerConfig) error {
 		if err != nil {
 			return err
 		}
-		err = checkQueueResourceProfileConfig(partition.Queues[0], partition.ResourceProfiles)
+
+		profileMap, err := checkResourceProfileEntries(partition)
+		if err != nil {
+			return err
+		}
+		err = checkResourceProfileResources(profileMap)
+		if err != nil {
+			return err
+		}
+		err = checkQueueResourceProfiles(partition.Queues[0], profileMap)
 		if err != nil {
 			return err
 		}

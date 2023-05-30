@@ -45,12 +45,12 @@ type SchedulerConfig struct {
 type PartitionConfig struct {
 	Name              string
 	Queues            []QueueConfig
-	PlacementRules    []PlacementRule                  `yaml:",omitempty" json:",omitempty"`
-	Limits            []Limit                          `yaml:",omitempty" json:",omitempty"`
-	Preemption        PartitionPreemptionConfig        `yaml:",omitempty" json:",omitempty"` // deprecated
-	NodeSortPolicy    NodeSortingPolicy                `yaml:",omitempty" json:",omitempty"`
-	StateDumpFilePath string                           `yaml:",omitempty" json:",omitempty"`
-	ResourceProfiles  map[string]ResourceProfileConfig `yaml:",omitempty" json:",omitempty"`
+	PlacementRules    []PlacementRule           `yaml:",omitempty" json:",omitempty"`
+	Limits            []Limit                   `yaml:",omitempty" json:",omitempty"`
+	Preemption        PartitionPreemptionConfig `yaml:",omitempty" json:",omitempty"` // deprecated
+	NodeSortPolicy    NodeSortingPolicy         `yaml:",omitempty" json:",omitempty"`
+	StateDumpFilePath string                    `yaml:",omitempty" json:",omitempty"`
+	ResourceProfiles  []ResourceProfileConfig   `yaml:",omitempty" json:",omitempty"`
 }
 
 // deprecated
@@ -96,6 +96,7 @@ type Resources struct {
 }
 
 type ResourceProfileConfig struct {
+	Name          string            `yaml:",omitempty" json:",omitempty"`
 	NodeSelectors map[string]string `yaml:",omitempty" json:",omitempty"`
 	Resources     map[string]string `yaml:",omitempty" json:",omitempty"`
 }

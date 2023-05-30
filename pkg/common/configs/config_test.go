@@ -572,13 +572,15 @@ func TestParseResourceProfile(t *testing.T) {
 partitions:
   - name: default
     resourceprofiles:
-      foo:
+      - name: foo
         nodeselectors:
           bar: baz
+        resources:
+          memory: 10P
     queues:
       - name: root
         queues:
-          - name: foo
+          - name: queue
             resources:
               profiles:
                 - foo
@@ -587,14 +589,51 @@ partitions:
 	assert.NilError(t, err)
 }
 
-func TestParseResourceProfileFail(t *testing.T) {
+func TestParseResourceProfileFail_DuplicatedResourceProfile(t *testing.T) {
 	conf := `
 partitions:
   - name: default
     resourceprofiles:
-      bar:
-        nodeselectors:
-          key: value
+      - name: bar
+      - name: bar
+    queues:
+      - name: root
+        queues:
+          - name: queue
+            resources:
+              profiles:
+                - bar
+`
+	_, err := CreateConfig(conf)
+	assert.ErrorContains(t, err, "duplicate resource profile found with name bar")
+}
+
+func TestParseResourceProfileFail_InvalidQuantity(t *testing.T) {
+	conf := `
+partitions:
+  - name: default
+    resourceprofiles:
+      - name: foo
+        resources:
+          memory: bar
+    queues:
+      - name: root
+        queues:
+          - name: queue
+            resources:
+              profiles:
+                - foo
+`
+	_, err := CreateConfig(conf)
+	assert.ErrorContains(t, err, "invalid quantity")
+}
+
+func TestParseResourceProfileFail_NonexistentProfile(t *testing.T) {
+	conf := `
+partitions:
+  - name: default
+    resourceprofiles:
+      - name: bar
     queues:
       - name: root
         queues:
@@ -606,7 +645,26 @@ partitions:
                 - baz
 `
 	_, err := CreateConfig(conf)
-	assert.ErrorContains(t, err, "nonexistent resource profiles: foo, baz")
+	assert.ErrorContains(t, err, "nonexistent profiles [foo, baz]")
+}
+
+func TestParseResourceProfileFail_DuplicatedQueueProfile(t *testing.T) {
+	conf := `
+partitions:
+  - name: default
+    resourceprofiles:
+      - name: bar
+    queues:
+      - name: root
+        queues:
+          - name: queue
+            resources:
+              profiles:
+                - bar
+                - bar
+`
+	_, err := CreateConfig(conf)
+	assert.ErrorContains(t, err, "duplicated profiles [bar]")
 }
 
 func TestParseACLFail(t *testing.T) {

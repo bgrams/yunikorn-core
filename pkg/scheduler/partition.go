@@ -123,12 +123,12 @@ func (pc *PartitionContext) initialPartitionFromConfig(conf configs.PartitionCon
 		zap.String("rmID", pc.RmID))
 
 	var rp *objects.ResourceProfile
-	for k, v := range conf.ResourceProfiles {
-		rp, err = objects.NewResourceProfileFromConfig(v)
+	for _, c := range conf.ResourceProfiles {
+		rp, err = objects.NewResourceProfileFromConfig(c)
 		if err != nil {
 			return err
 		}
-		pc.resourceProfiles[k] = rp
+		pc.resourceProfiles[c.Name] = rp
 	}
 
 	pc.rules = &conf.PlacementRules
