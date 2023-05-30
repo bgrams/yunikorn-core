@@ -90,6 +90,7 @@ func newPartitionContext(conf configs.PartitionConfig, rmID string, cc *ClusterC
 		stateTime:             time.Now(),
 		applications:          make(map[string]*objects.Application),
 		completedApplications: make(map[string]*objects.Application),
+		resourceProfiles:      make(map[string]*objects.ResourceProfile),
 		nodes:                 objects.NewNodeCollection(conf.Name),
 	}
 	pc.partitionManager = newPartitionManager(pc, cc)
@@ -120,6 +121,15 @@ func (pc *PartitionContext) initialPartitionFromConfig(conf configs.PartitionCon
 	log.Logger().Info("root queue added",
 		zap.String("partitionName", pc.Name),
 		zap.String("rmID", pc.RmID))
+
+	var rp *objects.ResourceProfile
+	for k, v := range conf.ResourceProfiles {
+		rp, err = objects.NewResourceProfileFromConfig(v)
+		if err != nil {
+			return err
+		}
+		pc.resourceProfiles[k] = rp
+	}
 
 	pc.rules = &conf.PlacementRules
 	// We need to pass in the locked version of the GetQueue function.

@@ -567,6 +567,48 @@ partitions:
 	}
 }
 
+func TestParseResourceProfile(t *testing.T) {
+	conf := `
+partitions:
+  - name: default
+    resourceprofiles:
+      foo:
+        nodeselectors:
+          bar: baz
+    queues:
+      - name: root
+        queues:
+          - name: foo
+            resources:
+              profiles:
+                - foo
+`
+	_, err := CreateConfig(conf)
+	assert.NilError(t, err)
+}
+
+func TestParseResourceProfileFail(t *testing.T) {
+	conf := `
+partitions:
+  - name: default
+    resourceprofiles:
+      bar:
+        nodeselectors:
+          key: value
+    queues:
+      - name: root
+        queues:
+          - name: queue
+            resources:
+              profiles:
+                - foo
+                - bar
+                - baz
+`
+	_, err := CreateConfig(conf)
+	assert.ErrorContains(t, err, "nonexistent resource profiles: foo, baz")
+}
+
 func TestParseACLFail(t *testing.T) {
 	data := `
 partitions:

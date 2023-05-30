@@ -3,6 +3,7 @@ package objects
 import (
 	"sync"
 
+	"github.com/apache/yunikorn-core/pkg/common/configs"
 	"github.com/apache/yunikorn-core/pkg/common/resources"
 )
 
@@ -34,6 +35,14 @@ func NewResourceProfile(r *resources.Resource, s map[string]string) *ResourcePro
 	profile.refreshNodeStatistics()
 	profile.StartListening()
 	return profile
+}
+
+func NewResourceProfileFromConfig(conf configs.ResourceProfileConfig) (*ResourceProfile, error) {
+	r, err := resources.NewResourceFromConf(conf.Resources)
+	if err != nil {
+		return nil, err
+	}
+	return NewResourceProfile(r, conf.NodeSelectors), nil
 }
 
 func (rp *ResourceProfile) AddApplication(app *Application) {

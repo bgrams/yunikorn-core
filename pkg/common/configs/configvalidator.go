@@ -170,6 +170,27 @@ func checkResourceConfig(cur QueueConfig) (*resources.Resource, *resources.Resou
 	return g, m, nil
 }
 
+func checkQueueResourceProfileConfig(queue QueueConfig, profiles map[string]ResourceProfileConfig) error {
+	failed := make([]string, 0)
+	for _, profile := range queue.Resources.Profiles {
+		if _, ok := profiles[profile]; !ok {
+			failed = append(failed, profile)
+		}
+	}
+	if len(failed) > 0 {
+		failstr := strings.Join(failed, ", ")
+		return fmt.Errorf("queue %s references nonexistent resource profiles: %s", queue.Name, failstr)
+	}
+
+	for _, q := range queue.Queues {
+		err := checkQueueResourceProfileConfig(q, profiles)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Check the placement rules for correctness
 func checkPlacementRules(partition *PartitionConfig) error {
 	// return if nothing defined
@@ -592,6 +613,10 @@ func Validate(newConfig *SchedulerConfig) error {
 			return err
 		}
 		_, err = checkQueueResource(partition.Queues[0], nil)
+		if err != nil {
+			return err
+		}
+		err = checkQueueResourceProfileConfig(partition.Queues[0], partition.ResourceProfiles)
 		if err != nil {
 			return err
 		}
