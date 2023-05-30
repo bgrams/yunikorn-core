@@ -1077,6 +1077,13 @@ func (sq *Queue) sortQueues() []*Queue {
 	return sortedQueues
 }
 
+func (sq *Queue) GetResourceProfiles() []string {
+	if len(sq.resourceProfiles) == 0 && sq.parent != nil {
+		return sq.parent.GetResourceProfiles()
+	}
+	return sq.resourceProfiles
+}
+
 // getHeadRoom returns the headroom for the queue. This can never be more than the headroom for the parent.
 // In case there are no nodes in a newly started cluster and no queues have a limit configured this call
 // will return nil.

@@ -1568,10 +1568,10 @@ func (sa *Application) SetResourceProfile(profile string) {
 	sa.resourceProfile = profile
 }
 
-func (sa *Application) UnSetResourceProfile() {
-	sa.Lock()
-	defer sa.Unlock()
-	sa.resourceProfile = ""
+func (sa *Application) GetResourceProfile() string {
+	sa.RLock()
+	defer sa.RUnlock()
+	return sa.resourceProfile
 }
 
 func (sa *Application) StartTime() time.Time {

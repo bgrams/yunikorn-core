@@ -356,6 +356,12 @@ func (pc *PartitionContext) AddApplication(app *objects.Application) error {
 		}
 	}
 
+	if resourceProfiles := queue.GetResourceProfiles(); len(resourceProfiles) > 0 {
+		profile := resourceProfiles[0] // TODO
+		app.SetResourceProfile(profile)
+		pc.resourceProfiles[profile].AddApplication(app)
+	}
+
 	// all is OK update the app and add it to the partition
 	app.SetQueue(queue)
 	app.SetTerminatedCallback(pc.moveTerminatedApp)
@@ -401,6 +407,11 @@ func (pc *PartitionContext) removeApplication(appID string) []*objects.Allocatio
 			}
 		}
 	}
+
+	if profile := app.GetResourceProfile(); profile != "" {
+		pc.resourceProfiles[profile].RemoveApplication(app.ApplicationID)
+	}
+
 	return allocations
 }
 
@@ -592,6 +603,10 @@ func (pc *PartitionContext) addNodeToList(node *objects.Node) error {
 	}
 	metrics.GetSchedulerMetrics().IncActiveNodes()
 
+	for _, profile := range pc.resourceProfiles {
+		profile.AddNode(node)
+	}
+
 	// update/set the resources available in the cluster
 	if pc.totalPartitionResource == nil {
 		pc.totalPartitionResource = node.GetCapacity().Clone()
@@ -622,6 +637,9 @@ func (pc *PartitionContext) removeNodeFromList(nodeID string) *objects.Node {
 
 	// Remove node from list of tracked nodes
 	metrics.GetSchedulerMetrics().DecActiveNodes()
+	for _, profile := range pc.resourceProfiles {
+		profile.RemoveNode(nodeID)
+	}
 
 	// found the node cleanup the available resources, partition resources cannot be nil at this point
 	pc.totalPartitionResource.SubFrom(node.GetCapacity())
