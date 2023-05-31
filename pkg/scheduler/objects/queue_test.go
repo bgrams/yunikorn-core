@@ -643,6 +643,23 @@ func TestSortQueue(t *testing.T) {
 	}
 }
 
+func TestQueue_GetResourceProfiles(t *testing.T) {
+	root := mustQueue(createRootQueue(nil))
+	root.resourceProfiles = []string{"p1"}
+
+	child1 := mustQueue(createDynamicQueue(root, "child1", true))
+	child1.resourceProfiles = []string{"c1"}
+
+	child2 := mustQueue(createDynamicQueue(root, "child2", true))
+	child3 := mustQueue(createDynamicQueue(child2, "child3", false))
+	child3.resourceProfiles = []string{"c2"}
+
+	assert.Equal(t, "p1", root.GetResourceProfiles()[0])
+	assert.Equal(t, "c1", child1.GetResourceProfiles()[0])
+	assert.Equal(t, "p1", child2.GetResourceProfiles()[0])
+	assert.Equal(t, "c2", child3.GetResourceProfiles()[0])
+}
+
 func TestHeadroom(t *testing.T) {
 	// create the root: nil test
 	root, err := createRootQueue(nil)
@@ -2461,4 +2478,11 @@ func TestQueue_setAllocatingAccepted(t *testing.T) {
 	}()
 	var q *Queue
 	q.setAllocatingAccepted("")
+}
+
+func mustQueue(q *Queue, err error) *Queue {
+	if err != nil {
+		panic(err)
+	}
+	return q
 }

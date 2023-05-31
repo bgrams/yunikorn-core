@@ -1078,6 +1078,9 @@ func (sq *Queue) sortQueues() []*Queue {
 }
 
 func (sq *Queue) GetResourceProfiles() []string {
+	sq.RLock()
+	defer sq.RUnlock()
+
 	if len(sq.resourceProfiles) == 0 && sq.parent != nil {
 		return sq.parent.GetResourceProfiles()
 	}
