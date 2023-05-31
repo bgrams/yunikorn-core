@@ -8,8 +8,8 @@ import (
 )
 
 type ResourceProfile struct {
-	Resources    *resources.Resource
-	NodeSelector map[string]string
+	Resources  *resources.Resource
+	NodeLabels map[string]string
 
 	// Access should be locked
 	nodes                 map[string]*Node
@@ -26,7 +26,7 @@ type ResourceProfile struct {
 func NewResourceProfile(r *resources.Resource, s map[string]string) *ResourceProfile {
 	profile := &ResourceProfile{
 		Resources:    r,
-		NodeSelector: s,
+		NodeLabels:   s,
 		nodes:        make(map[string]*Node),
 		applications: make(map[string]*Application),
 		nodeUpdated:  make(chan struct{}, 1),
@@ -42,7 +42,7 @@ func NewResourceProfileFromConfig(conf configs.ResourceProfileConfig) (*Resource
 	if err != nil {
 		return nil, err
 	}
-	return NewResourceProfile(r, conf.NodeSelectors), nil
+	return NewResourceProfile(r, conf.NodeLabels), nil
 }
 
 func (rp *ResourceProfile) AddApplication(app *Application) {
@@ -172,11 +172,11 @@ func (rp *ResourceProfile) addNodeInternal(node *Node) {
 }
 
 func (rp *ResourceProfile) matchesNode(node *Node) bool {
-	if rp.NodeSelector == nil {
+	if rp.NodeLabels == nil {
 		return true
 	}
 
-	for k, v := range rp.NodeSelector {
+	for k, v := range rp.NodeLabels {
 		if node.attributes != nil && node.GetAttribute(k) != v {
 			return false
 		}

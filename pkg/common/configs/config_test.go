@@ -573,7 +573,7 @@ partitions:
   - name: default
     resourceprofiles:
       - name: foo
-        nodeselectors:
+        nodelabels:
           bar: baz
         resources:
           memory: 10P

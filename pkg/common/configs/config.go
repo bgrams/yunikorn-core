@@ -96,9 +96,9 @@ type Resources struct {
 }
 
 type ResourceProfileConfig struct {
-	Name          string            `yaml:",omitempty" json:",omitempty"`
-	NodeSelectors map[string]string `yaml:",omitempty" json:",omitempty"`
-	Resources     map[string]string `yaml:",omitempty" json:",omitempty"`
+	Name       string            `yaml:",omitempty" json:",omitempty"`
+	NodeLabels map[string]string `yaml:",omitempty" json:",omitempty"`
+	Resources  map[string]string `yaml:",omitempty" json:",omitempty"`
 }
 
 // The queue placement rule definition
